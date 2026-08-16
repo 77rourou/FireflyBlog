@@ -1,0 +1,234 @@
+---
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+
+// ============================================================
+// 追番软件分享页
+// 数据来源于 awafuns.cn 导航栏「看电视」收藏，链接有效性已检测
+// status: "ok" 可用 | "warn" 待确认（检测时无法访问）
+// 新增 / 修改软件：直接编辑下方 categories 数组即可
+// ============================================================
+const checkedDate = "2026-08-16";
+
+const categories: {
+	name: string;
+	icon: string;
+	desc: string;
+	sites: {
+		name: string;
+		desc: string;
+		url: string;
+		status: "ok" | "warn";
+	}[];
+}[] = [
+	{
+		name: "动漫",
+		icon: "material-symbols:movie",
+		desc: "在线动漫 / 弹幕追番 / 发布页",
+		sites: [
+			{
+				name: "Animeko",
+				desc: "一站式在线弹幕追番平台",
+				url: "https://myani.org/",
+				status: "ok",
+			},
+			{
+				name: "次元城",
+				desc: "动漫发布页",
+				url: "https://www.cycity.pro/",
+				status: "ok",
+			},
+			{
+				name: "AGE动漫",
+				desc: "在线动漫资源站",
+				url: "https://age.tv/",
+				status: "ok",
+			},
+			{
+				name: "囧次元",
+				desc: "动漫发布页（邀请码：wacpkd）",
+				url: "https://jocyapp.cc/",
+				status: "ok",
+			},
+			{
+				name: "动漫共和国",
+				desc: "动漫发布页",
+				url: "https://oneghg.com/",
+				status: "ok",
+			},
+			{
+				name: "omofun",
+				desc: "官网已复活，在线追番",
+				url: "https://lanerc.app/",
+				status: "ok",
+			},
+			{
+				name: "MX动漫",
+				desc: "国漫 & 日漫",
+				url: "http://www.mxdm.tv/",
+				status: "ok",
+			},
+		],
+	},
+	{
+		name: "影视",
+		icon: "material-symbols:play-circle",
+		desc: "动漫 & 影视在线观看",
+		sites: [
+			{
+				name: "FreeOK",
+				desc: "动漫 & 追剧",
+				url: "https://freeok.lol/",
+				status: "ok",
+			},
+			{
+				name: "追剧影视",
+				desc: "动漫 & 追剧",
+				url: "http://zjuys.com/",
+				status: "ok",
+			},
+			{
+				name: "追影猫",
+				desc: "在线影视",
+				url: "https://zhuiyingmao6.com/",
+				status: "ok",
+			},
+			{
+				name: "网飞猫",
+				desc: "在线影视（注意：不带 www 才能访问）",
+				url: "https://ncat1.app/",
+				status: "ok",
+			},
+		],
+	},
+	{
+		name: "待确认",
+		icon: "material-symbols:help",
+		desc: "检测时无法访问，可能已更换域名或临时故障",
+		sites: [
+			{
+				name: "奈飞工厂",
+				desc: "在线影视（检测时证书异常，可能已更换域名）",
+				url: "https://yanetflix.com/",
+				status: "warn",
+			},
+			{
+				name: "可可影视",
+				desc: "在线影视（域名经常更换，可百度搜索最新地址）",
+				url: "https://www.kkys03.com/",
+				status: "warn",
+			},
+		],
+	},
+];
+---
+
+<MainGridLayout title="追番软件" description="追番 / 看剧软件分享">
+  <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+    <div class="card-base z-10 px-9 py-6 relative w-full">
+      <!-- 页面标题 -->
+      <div class="mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="h-8 w-8 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70">
+            <Icon is:inline name="material-symbols:smart-display" class="text-[1.5rem]" />
+          </div>
+          <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            追番软件
+          </div>
+        </div>
+        <p class="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed mb-4">
+          收藏的追番 / 看剧软件导航，数据来源于我的文档站
+          <a
+            href="https://www.awafuns.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-(--primary) hover:underline"
+          >awafuns.cn</a
+          >
+          导航栏「看电视」分类，链接有效性已于 {checkedDate} 检测。
+        </p>
+      </div>
+
+      <!-- 分类区块 -->
+      {
+        categories.map((cat) => (
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <Icon is:inline name={cat.icon} class="text-(--primary) text-xl" />
+              <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                {cat.name}
+              </h2>
+              <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                {cat.desc}
+              </span>
+            </div>
+            <div class="friends-grid">
+              {cat.sites.map((site) => (
+                <a
+                  href={site.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="friend-card group flex items-center gap-3 p-2.5 rounded-xl border border-(--line-divider) hover:border-(--primary) hover:bg-(--card-bg) transition-all duration-300 hover:shadow-lg relative overflow-hidden"
+                >
+                  <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none" />
+
+                  <div class="grow min-w-0 flex flex-col justify-center gap-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-base text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors truncate">
+                        {site.name}
+                      </span>
+                      {
+                        site.status === "ok" ? (
+                          <span class="text-[0.65rem] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                            可用
+                          </span>
+                        ) : (
+                          <span class="text-[0.65rem] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                            待确认
+                          </span>
+                        )
+                      }
+                    </div>
+                    <div class="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1" title={site.desc}>
+                      {site.desc}
+                    </div>
+                    <div class="text-xs text-neutral-400 dark:text-neutral-500 truncate">
+                      {site.url}
+                    </div>
+                  </div>
+
+                  <Icon
+                    is:inline
+                    name="material-symbols:arrow-outward-rounded"
+                    class="text-(--primary) text-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shrink-0"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+
+      <!-- 使用提示 -->
+      <div class="mt-2 rounded-xl border border-(--line-divider) bg-neutral-100/60 dark:bg-neutral-800/50 p-4 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+        <div class="flex items-center gap-2 mb-1 font-bold text-neutral-800 dark:text-neutral-200">
+          <Icon is:inline name="material-symbols:info-outline" class="text-(--primary) text-lg" />
+          使用提示
+        </div>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>发布页 / 资源站类站点域名更换频繁，链接失效时请以官方公告或自行搜索最新地址为准。</li>
+          <li>此类站点内容繁杂、质量参差不齐，请仔细审查与甄别，谨防虚假资源、诱导下载、钓鱼链接与恶意软件。</li>
+          <li>请合理使用网络资源，注意网络安全与版权问题。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <style is:global>
+    .friends-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+  </style>
+</MainGridLayout>

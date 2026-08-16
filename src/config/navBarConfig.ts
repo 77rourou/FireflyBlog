@@ -64,6 +64,13 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 番组计划
 			LinkPresets.Bangumi,
+
+			// 追番软件
+			{
+				name: "追番软件",
+				url: "/anime-software/",
+				icon: "material-symbols:smart-display",
+			},
 		],
 	});
 
