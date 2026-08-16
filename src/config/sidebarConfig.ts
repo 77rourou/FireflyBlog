@@ -61,8 +61,8 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 		{
 			// 组件类型：音乐播放器
 			type: "music",
-			// 是否启用该组件
-			enable: true,
+			// 是否启用该组件（当前已关闭）
+			enable: false,
 			// 组件位置
 			position: "sticky",
 			// 是否在文章详情页显示
@@ -143,6 +143,13 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				siteInfo: {
 					// 未能识别的构建平台回退显示文本，可自定义
 					unknownBuildPlatform: "Unknown CI",
+					// 自定义覆盖值：站点部署在 Linux 服务器/CI 上，展示值不再使用本地构建机信息
+					// 未设置的字段仍自动检测（构建时信息），可按实际部署环境修改：
+					// buildPlatform: "Cloudflare Pages",
+					// system: "Linux / ARM64",
+					custom: {
+						system: "Linux / x86_64",
+					},
 				},
 			},
 		},
@@ -315,6 +322,10 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				siteInfo: {
 					// 未能识别的构建平台回退显示文本，可自定义
 					unknownBuildPlatform: "Unknown CI",
+					// 自定义覆盖值：站点部署在 Linux 服务器/CI 上，展示值不再使用本地构建机信息
+					custom: {
+						system: "Linux / x86_64",
+					},
 				},
 			},
 		},

@@ -44,8 +44,8 @@ export const friendsConfig: FriendLink[] = [
 		enabled: true,
 	},
 	{
-		title: "BlockTavewrn - 方块酒馆",
-		imgurl: "/src/config/images/logo.png",
+		title: "BlockTavern - 方块酒馆",
+		imgurl: "/assets/images/logo-blocktavern.png",
 		desc: "认准 BlockTavern 官方网站，获取最新安全版本",
 		siteurl: "https://www.blocktavern.cn/",
 		tags: ["游戏"],

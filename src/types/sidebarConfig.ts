@@ -50,6 +50,18 @@ export type DynamicWidgetConfig = {
 // 站点信息组件专用配置
 export type SiteInfoConfig = {
 	unknownBuildPlatform?: string; // 未识别的构建平台显示文本，默认 "Unknown CI"
+	// 自定义覆盖值：设置后优先显示自定义内容，未设置则自动检测（构建时信息）
+	// 适用于构建机与部署环境不一致的场景，例如本地 Windows 构建后部署到 Linux 服务器
+	custom?: {
+		buildPlatform?: string; // 自定义构建平台，如 "Cloudflare Pages"、"Vercel"
+		system?: string; // 自定义系统信息，如 "Linux / x86_64"、"Linux / ARM64"
+		domain?: string; // 自定义站点域名
+		blogVersion?: string; // 自定义博客版本
+		astroVersion?: string; // 自定义 Astro 版本
+		nodeVersion?: string; // 自定义 Node 版本
+		pnpmVersion?: string; // 自定义 pnpm 版本
+		buildTime?: string; // 自定义构建时间
+	};
 };
 
 // 日历组件专用配置

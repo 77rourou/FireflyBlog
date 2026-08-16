@@ -21,6 +21,9 @@ const { class: className, style, widgetConfig } = Astro.props;
 
 const showTitle = widgetConfig?.showTitle !== false;
 
+// ---- 站点信息自定义覆盖值（配置优先，未配置则自动检测） ----
+const siteInfoCustom = widgetConfig?.specificConfig?.siteInfo?.custom;
+
 // ---- 构建时收集版本和环境信息 ----
 
 // 博客版本（从 package.json 读取）
@@ -31,6 +34,9 @@ try {
 	);
 	blogVersion = pkg.version || "Firefly unknown";
 } catch {}
+if (siteInfoCustom?.blogVersion) {
+	blogVersion = siteInfoCustom.blogVersion;
+}
 
 // Astro 版本（从已安装的 astro 包读取）
 let astroVersion = "unknown";
@@ -39,9 +45,15 @@ try {
 	const astroPkg = require("astro/package.json");
 	astroVersion = astroPkg.version || "unknown";
 } catch {}
+if (siteInfoCustom?.astroVersion) {
+	astroVersion = siteInfoCustom.astroVersion;
+}
 
 // Node 版本
-const nodeVersion = process.version;
+let nodeVersion = process.version;
+if (siteInfoCustom?.nodeVersion) {
+	nodeVersion = siteInfoCustom.nodeVersion;
+}
 
 // pnpm 版本（从 npm_config_user_agent 解析）
 let pnpmVersion = "unknown";
@@ -49,21 +61,40 @@ const userAgent = process.env.npm_config_user_agent || "";
 const pnpmMatch = userAgent.match(/pnpm\/([\d.]+)/);
 if (pnpmMatch) {
 	pnpmVersion = `v${pnpmMatch[1]}`;
+} else {
+	// 兜底：环境变量中无 pnpm 信息时（如 npm/npx 直接构建、部分 CI），直接调用 pnpm 命令获取版本
+	try {
+		const { execSync } = await import("node:child_process");
+		const raw = execSync("pnpm --version", {
+			encoding: "utf8",
+			timeout: 5000,
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+		if (raw) {
+			pnpmVersion = `v${raw}`;
+		}
+	} catch {}
+}
+if (siteInfoCustom?.pnpmVersion) {
+	pnpmVersion = siteInfoCustom.pnpmVersion;
 }
 
 // 构建时间
-const buildTime = formatDateI18nWithTime(new Date());
+const buildTime =
+	siteInfoCustom?.buildTime || formatDateI18nWithTime(new Date());
 
 // 构建平台检测（使用 ci-info 自动识别 CI 环境）
 const unknownBuildPlatform =
 	widgetConfig?.specificConfig?.siteInfo?.unknownBuildPlatform || "Unknown CI";
-const buildPlatform = detectBuildPlatform({
-	env: process.env,
-	isCI: ci.isCI,
-	ciName: ci.name,
-	isDev: import.meta.env.DEV,
-	unknownBuildPlatform,
-});
+const buildPlatform =
+	siteInfoCustom?.buildPlatform ||
+	detectBuildPlatform({
+		env: process.env,
+		isCI: ci.isCI,
+		ciName: ci.name,
+		isDev: import.meta.env.DEV,
+		unknownBuildPlatform,
+	});
 
 // 系统信息（平台 + 架构）
 const platformMap: Record<string, string> = {
@@ -80,12 +111,15 @@ const archMap: Record<string, string> = {
 };
 const osName = platformMap[process.platform] || process.platform;
 const archName = archMap[process.arch] || process.arch;
-const systemInfo = `${osName} / ${archName}`;
+const systemInfo =
+	siteInfoCustom?.system || `${osName} / ${archName}`;
 
 // 站点域名（去掉协议前缀）
-const siteDomain = siteConfig.site_url
-	? siteConfig.site_url.replace(/^https?:\/\//, "").replace(/\/$/, "")
-	: "unknown";
+const siteDomain = siteInfoCustom?.domain
+	? siteInfoCustom.domain.replace(/^https?:\/\//, "").replace(/\/$/, "")
+	: siteConfig.site_url
+		? siteConfig.site_url.replace(/^https?:\/\//, "").replace(/\/$/, "")
+		: "unknown";
 
 // 文章许可
 const licenseName = licenseConfig.enable ? licenseConfig.name : "None";
