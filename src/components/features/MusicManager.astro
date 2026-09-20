@@ -10,21 +10,26 @@ const localPlaylist =
 	config.mode === "local" && config.local?.playlist
 		? config.local.playlist.map((song) => {
 				const isFullUrl = (path: string) => /^https?:\/\//.test(path);
-				return {
-					name: song.name,
-					artist: song.artist,
-					url: isFullUrl(song.url) ? song.url : url(song.url),
-					pic: song.cover
-						? isFullUrl(song.cover)
-							? song.cover
-							: url(song.cover)
-						: undefined,
-					lrc: song.lrc
-						? isFullUrl(song.lrc)
-							? song.lrc
-							: url(song.lrc)
-						: undefined,
-				};
+			return {
+				name: song.name,
+				artist: song.artist,
+				url: song.url
+					? isFullUrl(song.url)
+						? song.url
+						: url(song.url)
+					: undefined,
+				pic: song.cover
+					? isFullUrl(song.cover)
+						? song.cover
+						: url(song.cover)
+					: undefined,
+				lrc: song.lrc
+					? isFullUrl(song.lrc)
+						? song.lrc
+						: url(song.lrc)
+					: undefined,
+				meting: song.meting,
+			};
 			})
 		: [];
 
@@ -129,16 +134,22 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Meting fetch ─────────────────────────────────────────
-    async function fetchMetingData() {
-        if (!config.meting) return;
-        var m = config.meting;
-        var apis = [m.api].concat(m.fallbackApis || []);
+    // 解析单个 Meting 音源（server/type/id），返回歌曲数组；失败返回 []
+    async function fetchMetingPlaylist(m) {
+        if (!m) return [];
+        var baseApi = m.api
+            || (config.meting && config.meting.api)
+            || "https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r";
+        var fallbackApis = m.fallbackApis
+            || (config.meting && config.meting.fallbackApis)
+            || [];
+        var apis = [baseApi].concat(fallbackApis);
 
         for (var i = 0; i < apis.length; i++) {
-            var baseApi = apis[i];
-            if (!baseApi) continue;
+            var api = apis[i];
+            if (!api) continue;
             try {
-                var fetchUrl = baseApi
+                var fetchUrl = api
                     .replace(':server', m.server)
                     .replace(':type', m.type)
                     .replace(':id', m.id)
@@ -150,7 +161,7 @@ const managerConfigStr = JSON.stringify({
                 var data = await res.json();
 
                 if (Array.isArray(data) && data.length > 0) {
-                    state.playlist = data.map(function (item) {
+                    return data.map(function (item) {
                         return {
                             name: item.title || item.name || 'Unknown',
                             artist: item.author || item.artist || 'Unknown',
@@ -159,13 +170,21 @@ const managerConfigStr = JSON.stringify({
                             lrc: item.lrc
                         };
                     });
-                    return;
                 }
             } catch (e) {
-                console.warn('Meting API failed for ' + baseApi, e);
+                console.warn('Meting API failed for ' + api, e);
             }
         }
-        throw new Error('All Meting APIs failed');
+        return [];
+    }
+
+    // 兼容 mode === 'meting' 的整份歌单拉取
+    async function fetchMetingData() {
+        if (!config.meting) return;
+        state.playlist = await fetchMetingPlaylist(config.meting);
+        if (state.playlist.length === 0) {
+            throw new Error('All Meting APIs failed');
+        }
     }
 
     // ── Lyrics ───────────────────────────────────────────────
@@ -408,7 +427,26 @@ const managerConfigStr = JSON.stringify({
             if (config.mode === 'meting' && config.meting) {
                 await fetchMetingData();
             } else if (config.mode === 'local') {
-                state.playlist = config.localPlaylist || [];
+                var direct = [];
+                var metingEntries = [];
+                (config.localPlaylist || []).forEach(function (item) {
+                    if (item.meting) metingEntries.push(item);
+                    else direct.push(item);
+                });
+                state.playlist = direct;
+                // 解析每条外链音源，展开后追加到歌单（每条可指定不同平台）
+                for (var mi = 0; mi < metingEntries.length; mi++) {
+                    try {
+                        var resolved = await fetchMetingPlaylist(metingEntries[mi].meting);
+                        if (resolved.length) {
+                            state.playlist = state.playlist.concat(resolved);
+                        } else {
+                            console.warn('Meting entry returned no songs:', metingEntries[mi].meting);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to resolve meting entry:', e);
+                    }
+                }
             }
 
             if (state.playlist.length > 0) {

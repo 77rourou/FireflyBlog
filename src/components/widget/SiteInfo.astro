@@ -1,6 +1,7 @@
 ---
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { release } from "node:os";
 import { Icon } from "astro-icon/components";
 import ci from "ci-info";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
@@ -96,23 +97,62 @@ const buildPlatform =
 		unknownBuildPlatform,
 	});
 
-// 系统信息（平台 + 架构）
-const platformMap: Record<string, string> = {
-	win32: "Windows",
-	darwin: "macOS",
-	linux: "Linux",
-	freebsd: "FreeBSD",
-};
+// 系统信息（操作系统发行版 + 架构）
 const archMap: Record<string, string> = {
 	x64: "x86_64",
 	arm64: "ARM64",
 	arm: "ARM",
 	ia32: "x86",
 };
-const osName = platformMap[process.platform] || process.platform;
 const archName = archMap[process.arch] || process.arch;
+
+// 精确识别操作系统及发行版（Windows / macOS / 各 Linux 发行版），而非仅内核名
+function detectSystemLabel(): string {
+	if (process.platform === "linux") {
+		// 读取 /etc/os-release 拿到发行版名称与版本（如 Ubuntu 22.04 / CentOS 7）
+		try {
+			const content = readFileSync("/etc/os-release", "utf8");
+			const name = content.match(/^NAME="?([^"\n]+?)"?/m)?.[1]?.trim();
+			const versionId = content
+				.match(/^VERSION_ID="?([^"\n]+?)"?/m)?.[1]
+				?.trim();
+			if (name) return versionId ? `${name} ${versionId}` : name;
+		} catch {}
+		return "Linux";
+	}
+	if (process.platform === "win32") {
+		// os.release() 形如 10.0.22621（Win11）/ 10.0.19045（Win10）
+		const parts = release().split(".").map(Number);
+		const major = parts[0] ?? 0;
+		const minor = parts[1] ?? 0;
+		const build = parts[2] ?? 0;
+		if (major === 10 && build >= 22000) return "Windows 11";
+		if (major === 10) return "Windows 10";
+		if (major === 6 && minor === 1) return "Windows 7";
+		if (major === 6 && minor === 2) return "Windows 8";
+		if (major === 6 && minor === 3) return "Windows 8.1";
+		return "Windows";
+	}
+	if (process.platform === "darwin") {
+		// Darwin 主版本号映射 macOS 名称
+		const darwinMajor = Number(release().split(".")[0] ?? "0");
+		const macMap: Record<number, string> = {
+			20: "macOS 11 Big Sur",
+			21: "macOS 12 Monterey",
+			22: "macOS 13 Ventura",
+			23: "macOS 14 Sonoma",
+			24: "macOS 15 Sequoia",
+		};
+		return macMap[darwinMajor] || "macOS";
+	}
+	const platformMap: Record<string, string> = {
+		freebsd: "FreeBSD",
+	};
+	return platformMap[process.platform] || process.platform;
+}
+
 const systemInfo =
-	siteInfoCustom?.system || `${osName} / ${archName}`;
+	siteInfoCustom?.system || `${detectSystemLabel()} / ${archName}`;
 
 // 站点域名（去掉协议前缀）
 const siteDomain = siteInfoCustom?.domain
